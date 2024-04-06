@@ -1,9 +1,45 @@
 BackSpace:: ExitApp
+
 #include "v3_setups.ahk"
+#include "Object2Str.ahk"
 SendMode "Event"
 SetMouseDelay 10
 SetDefaultMouseSpeed 1
-WinMove(, , device.windowWidth, device.windowHeight, device.windowTitle)
+
+
+game := generateGameObject()
+Space:: windowSetup
+windowSetup() {
+    MouseGetPos , , &WhichWindow, &WhichControl
+
+    device.window := WhichWindow
+    device.control := WhichControl
+
+    ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, WhichControl, WhichWindow
+    WinGetPos &WindowOutX, &WindowOutY, &WindowOutWidth, &WindowOutHeight, WhichWindow
+
+    desiredWindowX := WindowOutWidth - OutWidth + device.screenWidth
+    desiredWindowY := WindowOutHeight - OutHeight + device.screenHeight
+    currentBorderX := OutX
+    currentBorderY := OutY
+
+    WinMove(, , desiredWindowX, desiredWindowY, WhichWindow)
+
+    ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, WhichControl, WhichWindow
+    WinGetPos &WindowOutX, &WindowOutY, &WindowOutWidth, &WindowOutHeight, WhichWindow
+
+
+    xBorder := [OutX, WindowOutWidth - OutWidth - OutX]
+    yBorder := [OutY, WindowOutHeight - OutHeight - OutY]
+    game := generateGameObject(xBorder, yBorder)
+    device.xBorder := xBorder
+    device.yBorder := yBorder
+
+    ;MsgBox(Object2Str(device))
+    ;MsgBox(Object2Str(game))
+}
+
+
 debug := false
 
 battleLength := 4
@@ -63,7 +99,7 @@ initialize() {
 
 
 activateWindow() {
-    WinActivate device.windowTitle
+    WinActivate device.window
 }
 
 collectElixir() {
@@ -150,7 +186,7 @@ startAttack() {
             secureClick game.attack.cancel ;click cancel and try again
         }
 
-        if(A_Index>1) {
+        if (A_Index > 1) {
             unstuck()
         }
     }
@@ -309,7 +345,7 @@ message(text, messageType := "") {
     }
 
     activateWindow()
-    x := 0
-    y := (t - 1) * 50
+    x := device.xBorder[1]
+    y := device.yBorder[1] + (t - 1) * 50
     ToolTip(text, x, y, t)
 }
