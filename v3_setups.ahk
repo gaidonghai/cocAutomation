@@ -62,7 +62,7 @@ generateGameObject() {
         army: {
             hero: xy([195, 1000]),
             troopX: x(365),
-            troopXinc: 150,
+            troopXinc: x(150,false),
             troopY: y(1050)
         },
         deploy: [
@@ -72,16 +72,14 @@ generateGameObject() {
     }
 
     generateStarCriterias() {
-        r := []
-        x1 := 1630
-        y1 := 860
-        xInc := 53
+        
         colorA := 0xDD962C ;Yellow
         colorB := 0XAED0E3 ;Silver
-
+        
+        r := []
         loop 6 {
             r.push {
-                center: xy([x1 + Mod(A_Index - 1, 3) * xInc, y1]),
+                center: xy([1630 + Mod(A_Index - 1, 3) * 53, 860]),
                 range: mag([5, 5]),
                 color: A_Index < 4 ? colorA : colorB
             }
