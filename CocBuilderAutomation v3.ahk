@@ -1,54 +1,22 @@
 #Requires AutoHotkey v2
 DllCall("SetThreadDpiAwarenessContext", "ptr", -3)
 
-BackSpace:: ExitApp
-
-
-
-
-
 #include "v3_setups.ahk"
 #include "Object2Str.ahk"
 SendMode "Event"
 SetMouseDelay 10
 SetDefaultMouseSpeed 1
 
-game := generateGameObject()
-Space:: windowSetup
+`:: ExitApp
 
-battleLength := 4
-starTarget := 3
-battleCycles := 300
-debug := 0
+debug := askInputBox("Debug?", 0)
+resizeWindowToSetup := askInputBox("Resize Window?", 0)
+battleLength := askInputBox("Battle length: (x15 secs)", 4)
+starTarget := askInputBox("Star Target: 1-3", 3)
+battleCycles := askInputBox("Cycles to run:", 300)
+game := systemSetup()
 
-if (1) {
-    message "system setup", "objective"
 
-    IB := InputBox("Battle length: (x15 secs)", "Battle options", "", battleLength)
-    if IB.Result == "Cancel" {
-        ExitApp
-    }
-    battleLength := IB.Value
-
-    IB := InputBox("Star Target: 1-3", "Battle options", "", starTarget)
-    if IB.Result == "Cancel" {
-        ExitApp
-    }
-    starTarget := IB.Value
-
-    IB := InputBox("Cycles to run:", "Battle options", "", battleCycles)
-    if IB.Result == "Cancel" {
-        ExitApp
-    }
-    battleCycles := IB.Value
-
-    IB := InputBox("Debug?", "Battle options", "", debug)
-    if IB.Result == "Cancel" {
-        ExitApp
-    }
-    debug := IB.Value
-
-}
 ;-------------AUTOMATION START-------------
 
 
@@ -67,6 +35,8 @@ ExitApp
 initialize() {
     ;set zoom and run a test attack
     activateWindow()
+
+
     message "Initializing...", "objective"
 
     message "zooming out", "progress"
@@ -272,9 +242,9 @@ checkCriteria(criteriaObject, timeout := 0, &Px := unset, &Py := unset) {
     while true {
         if (debug) {
             message Format("Searching color {1:#X}, get {2} ({3})", criteriaObject.color, PixelGetColorXY(criteriaObject.center), A_TickCount - startTime), "detail"
-        
+
         }
-        
+
         if securePixelSearch(&Px, &Py, criteriaObject) {
             ;message "", "detail"
             return true
@@ -301,10 +271,10 @@ checkCriteria(criteriaObject, timeout := 0, &Px := unset, &Py := unset) {
         color := criteriaObject.color
         x1 := Max(center[1] - range[1], device.xBorder[1])
         y1 := Max(center[2] - range[2], device.yBorder[1])
-        x2 := Min(center[1] + range[1], device.screenWidth - device.xBorder[2])
-        y2 := Min(center[2] + range[2], device.screenHeight - device.yBorder[2])
+        x2 := Min(center[1] + range[1], device.controlWidth - device.xBorder[2])
+        y2 := Min(center[2] + range[2], device.controlHeight - device.yBorder[2])
         activateWindow()
-        return PixelSearch(&Px, &Py, x1, y1, x2, y2, color, 16)
+        return PixelSearch(&Px, &Py, x1, y1, x2, y2, color, variation)
     }
 }
 
@@ -326,34 +296,47 @@ message(text, messageType := "") {
 }
 
 
-windowSetup() {
-    MouseGetPos , , &WhichWindow, &WhichControl
-
-    device.window := WhichWindow
-    device.control := WhichControl
-
-    ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, WhichControl, WhichWindow
-    WinGetPos &WindowOutX, &WindowOutY, &WindowOutWidth, &WindowOutHeight, WhichWindow
-
-    desiredWindowX := WindowOutWidth - OutWidth + device.screenWidth
-    desiredWindowY := WindowOutHeight - OutHeight + device.screenHeight
-    currentBorderX := OutX
-    currentBorderY := OutY
-
-    WinMove(, , desiredWindowX, desiredWindowY, WhichWindow)
-
-    ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, WhichControl, WhichWindow
-    WinGetPos &WindowOutX, &WindowOutY, &WindowOutWidth, &WindowOutHeight, WhichWindow
+systemSetup(resizeWindowToSetup := false) {
 
 
-    xBorder := [OutX, WindowOutWidth - OutWidth - OutX]
-    yBorder := [OutY, WindowOutHeight - OutHeight - OutY]
-    game := generateGameObject(xBorder, yBorder)
-    device.xBorder := xBorder
-    device.yBorder := yBorder
+    ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, device.control, device.window
+    WinGetPos &WindowOutX, &WindowOutY, &WindowOutWidth, &WindowOutHeight, device.window
+
+    if (resizeWindowToSetup) {
+        desiredWindowX := WindowOutWidth - OutWidth + device.standard.controlWidth
+        desiredWindowY := WindowOutHeight - OutHeight + device.standard.controlHeight
+        currentBorderX := OutX
+        currentBorderY := OutY
+    } else {
+        desiredWindowX := WindowOutWidth
+        desiredWindowY := WindowOutHeight - OutHeight + device.standard.controlHeight * (OutWidth / device.standard.controlWidth)
+        currentBorderX := OutX
+        currentBorderY := OutY
+    }
+
+    WinMove(0, 0, desiredWindowX, desiredWindowY, device.window)
+
+    ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, device.control, device.window
+
+    device.controlWidth := OutWidth
+    device.controlHeight := OutHeight
+    device.xBorder := [OutX, WindowOutWidth - OutWidth - OutX]
+    device.yBorder := [OutY, WindowOutHeight - OutHeight - OutY]
+
+    game := generateGameObject()
 
     if (debug) {
         MsgBox(Object2Str(device))
         MsgBox(Object2Str(game))
     }
+
+    return game
+}
+
+askInputBox(question, defaultValue) {
+    IB := InputBox(question, "Automation options", "", defaultValue)
+    if IB.Result == "Cancel" {
+        ExitApp
+    }
+    return IB.Value
 }

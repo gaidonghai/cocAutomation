@@ -1,14 +1,20 @@
 device := {
     name: "bluestacks",
-    screenWidth: 1920,
-    screenHeight: 1080,
-    xBorder: [1, 1],
-    yBorder: [49, 1],
     window: "BlueStacks Android 11",
-    control: "BlueStacksApp1"
+    control: "BlueStacksApp1",
+    standard : {
+        controlWidth: 1920,
+        controlHeight: 1080,
+        xBorder: [1, 1],
+        yBorder: [49, 1],
+    }
 }
 
-generateGameObject(xBorder := device.xBorder, yBorder := device.yBorder) {
+
+
+
+generateGameObject() {
+
     return {
         exitDialog: {
             cancel: xy([750, 750])
@@ -17,13 +23,13 @@ generateGameObject(xBorder := device.xBorder, yBorder := device.yBorder) {
             drag: [xy([900, 200]), xy([900, 1000])],
             cart: {
                 center: xy([1300, 700]),
-                range: [300, 300],
+                range: mag([300, 300]),
                 color: 0xb77e4f
             },
             collect: xy([1415, 960]),
             close: {
                 center: xy([1610, 155]),
-                range: [20, 20],
+                range: mag([20, 20]),
                 color: 0xE12025
             }
         },
@@ -33,12 +39,12 @@ generateGameObject(xBorder := device.xBorder, yBorder := device.yBorder) {
             cancel: xy([950, 1000]),
             enemyBaseCriteria: {
                 center: xy([390, 950]),
-                range: [30, 10],
+                range: mag([30, 10]),
                 color: 0xBB3CEE
             },
             attackButtonCriteria: {
                 center: xy([50, 980]),
-                range: [10, 10],
+                range: mag([10, 10]),
                 color: 0xDB8C30
             },
             starCriterias: generateStarCriterias(),
@@ -49,7 +55,7 @@ generateGameObject(xBorder := device.xBorder, yBorder := device.yBorder) {
             returnHome: xy([960, 960]),
             battleEndCriteria: {
                 center: xy([961, 938]), ;y level is critical
-                range: [100, 3],
+                range: mag([100, 3]),
                 color: 0xB3DB85
             }
         },
@@ -76,19 +82,45 @@ generateGameObject(xBorder := device.xBorder, yBorder := device.yBorder) {
         loop 6 {
             r.push {
                 center: xy([x1 + Mod(A_Index - 1, 3) * xInc, y1]),
-                range: [5, 5],
+                range: mag([5, 5]),
                 color: A_Index < 4 ? colorA : colorB
             }
         }
         return r
     }
 
-    x(x) {
-        return x - device.xBorder[1] + xBorder[1]
+    x(x, absoluteCoordinate := true) {
+        if (absoluteCoordinate) {
+            x -= device.standard.xBorder[1]
+        }
+
+        x := x * device.controlWidth / device.standard.controlWidth
+        if (absoluteCoordinate) {
+            x += device.xBorder[1]
+        }
+        x := Round(x)
+        return x
     }
-    y(y) {
-        return y - device.yBorder[1] + yBorder[1]
+
+    y(y, absoluteCoordinate := true) {
+        if (absoluteCoordinate) {
+            y -= device.standard.yBorder[1]
+        }
+        y := y * device.controlHeight / device.standard.controlHeight
+        if (absoluteCoordinate) {
+            y += device.yBorder[1]
+        }
+        y := Round(y)
+        return y
     }
+
+    mag(xy) {
+        return [
+            x(xy[1], false),
+            y(xy[2], false)
+        ]
+    }
+
     xy(xy) {
         return [
             x(xy[1]),
