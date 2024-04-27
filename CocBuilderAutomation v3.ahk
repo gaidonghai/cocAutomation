@@ -1,4 +1,11 @@
+#Requires AutoHotkey v2
+DllCall("SetThreadDpiAwarenessContext", "ptr", -3)
+
 BackSpace:: ExitApp
+
+
+
+
 
 #include "v3_setups.ahk"
 #include "Object2Str.ahk"
@@ -6,45 +13,14 @@ SendMode "Event"
 SetMouseDelay 10
 SetDefaultMouseSpeed 1
 
-
 game := generateGameObject()
 Space:: windowSetup
-windowSetup() {
-    MouseGetPos , , &WhichWindow, &WhichControl
-
-    device.window := WhichWindow
-    device.control := WhichControl
-
-    ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, WhichControl, WhichWindow
-    WinGetPos &WindowOutX, &WindowOutY, &WindowOutWidth, &WindowOutHeight, WhichWindow
-
-    desiredWindowX := WindowOutWidth - OutWidth + device.screenWidth
-    desiredWindowY := WindowOutHeight - OutHeight + device.screenHeight
-    currentBorderX := OutX
-    currentBorderY := OutY
-
-    WinMove(, , desiredWindowX, desiredWindowY, WhichWindow)
-
-    ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, WhichControl, WhichWindow
-    WinGetPos &WindowOutX, &WindowOutY, &WindowOutWidth, &WindowOutHeight, WhichWindow
-
-
-    xBorder := [OutX, WindowOutWidth - OutWidth - OutX]
-    yBorder := [OutY, WindowOutHeight - OutHeight - OutY]
-    game := generateGameObject(xBorder, yBorder)
-    device.xBorder := xBorder
-    device.yBorder := yBorder
-
-    ;MsgBox(Object2Str(device))
-    ;MsgBox(Object2Str(game))
-}
-
-
-debug := false
 
 battleLength := 4
 starTarget := 3
 battleCycles := 300
+debug := 0
+
 if (1) {
     message "system setup", "objective"
 
@@ -65,6 +41,13 @@ if (1) {
         ExitApp
     }
     battleCycles := IB.Value
+
+    IB := InputBox("Debug?", "Battle options", "", debug)
+    if IB.Result == "Cancel" {
+        ExitApp
+    }
+    debug := IB.Value
+
 }
 ;-------------AUTOMATION START-------------
 
@@ -146,10 +129,22 @@ runAttack(battleLength) {
         clickTroop(8)
     }
 
+    starCount := 0
     loop battleLength {
-        message "battle stage:" A_Index "/" battleLength, "progress"
-        if (fight(A_Index == 1 ? 10000 : 15000, starTarget)) {
-            break
+        startTime := A_TickCount
+        currentStage := A_Index
+        duration := currentStage == 1 ? 10000 : 15000
+
+        while A_TickCount - startTime <= duration {
+            message "battle stage:" currentStage "/" battleLength "(" A_TickCount - startTime "), current stars: " starCount "/" starTarget, "progress"
+            if checkCriteria(game.surrender.battleEndCriteria) || starCount >= starTarget {
+                message "", "progress"
+                break 2 ;quit two levels to end this attack
+            }
+
+            if (checkCriteria(game.attack.starCriterias[starCount + 1])) {
+                starCount++
+            }
         }
         secureClick game.army.hero
     }
@@ -201,26 +196,6 @@ unstuck() {
     secureClick game.exitDialog.cancel
 }
 
-fight(duration, starTarget := 1) {
-    startTime := A_TickCount
-    starCount := 0
-    while A_TickCount - startTime <= duration {
-        message "current stage: " A_TickCount - startTime ", current stars: " starCount "/" starTarget, "detail"
-
-        if checkCriteria(game.surrender.battleEndCriteria) || starCount >= starTarget {
-            message "", "detail"
-            return true
-        }
-
-        if (checkCriteria(game.attack.starCriterias[starCount + 1])) {
-            starCount++
-        }
-    }
-    message "", "detail"
-    return false
-
-}
-
 
 quitAttack() {
     while true {
@@ -270,8 +245,10 @@ secureClick(xy, delay := 200, button := "Left")
     y := xy[2]
 
     activateWindow()
+
     Click x + Random(-5, 5), y + Random(-5, 5), button
     sleep Random(delay, delay * 2)
+
 }
 
 secureDrag(xy1, xy2, speed := 20) {
@@ -290,27 +267,35 @@ secureDrag(xy1, xy2, speed := 20) {
 
 checkCriteria(criteriaObject, timeout := 0, &Px := unset, &Py := unset) {
     ;return false if timeout occur
-    ;Use tooltip 11
     startTime := A_TickCount
 
     while true {
-        if securePixelSearch(&Px, &Py, criteriaObject) {
-            message "", "debug"
-            return true
-        } else {
-            if timeout > 0 {
-                message "searching color: " A_TickCount - startTime, "debug"
-            }
+        if (debug) {
+            message Format("Searching color {1:#X}, get {2} ({3})", criteriaObject.color, PixelGetColorXY(criteriaObject.center), A_TickCount - startTime), "detail"
+        
         }
-        if (A_TickCount - startTime > timeout) {
-            break
+        
+        if securePixelSearch(&Px, &Py, criteriaObject) {
+            ;message "", "detail"
+            return true
+        }
+
+        if (A_TickCount - startTime >= timeout) {
+            ;message "", "detail"
+            return false
         }
     }
-    message "", "debug"
-    return false
+
+    PixelGetColorXY(xy) {
+        x := xy[1]
+        y := xy[2]
+        if (debug) {
+            MouseMove x, y
+        }
+        return PixelGetColor(x, y)
+    }
 
     securePixelSearch(&Px, &Py, criteriaObject, variation := 16) {
-
         center := criteriaObject.center
         range := criteriaObject.range
         color := criteriaObject.color
@@ -318,22 +303,11 @@ checkCriteria(criteriaObject, timeout := 0, &Px := unset, &Py := unset) {
         y1 := Max(center[2] - range[2], device.yBorder[1])
         x2 := Min(center[1] + range[1], device.screenWidth - device.xBorder[2])
         y2 := Min(center[2] + range[2], device.screenHeight - device.yBorder[2])
-
-        if (debug) {
-            centerX := Round((x1 + x2) / 2)
-            centerY := Round((y1 + y2) / 2)
-            MouseMove centerX, centerY
-        }
         activateWindow()
         return PixelSearch(&Px, &Py, x1, y1, x2, y2, color, 16)
     }
 }
 
-getColorString(xy) {
-    x := xy[1]
-    y := xy[2]
-    return x "," y ": " PixelGetColor(x, y)
-}
 
 message(text, messageType := "") {
     t := 1
@@ -342,10 +316,44 @@ message(text, messageType := "") {
         case "progress": t := 3
         case "detail": t := 4
         case "debug": t := 5
+        default: t := messageType
     }
 
     activateWindow()
     x := device.xBorder[1]
     y := device.yBorder[1] + (t - 1) * 50
     ToolTip(text, x, y, t)
+}
+
+
+windowSetup() {
+    MouseGetPos , , &WhichWindow, &WhichControl
+
+    device.window := WhichWindow
+    device.control := WhichControl
+
+    ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, WhichControl, WhichWindow
+    WinGetPos &WindowOutX, &WindowOutY, &WindowOutWidth, &WindowOutHeight, WhichWindow
+
+    desiredWindowX := WindowOutWidth - OutWidth + device.screenWidth
+    desiredWindowY := WindowOutHeight - OutHeight + device.screenHeight
+    currentBorderX := OutX
+    currentBorderY := OutY
+
+    WinMove(, , desiredWindowX, desiredWindowY, WhichWindow)
+
+    ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, WhichControl, WhichWindow
+    WinGetPos &WindowOutX, &WindowOutY, &WindowOutWidth, &WindowOutHeight, WhichWindow
+
+
+    xBorder := [OutX, WindowOutWidth - OutWidth - OutX]
+    yBorder := [OutY, WindowOutHeight - OutHeight - OutY]
+    game := generateGameObject(xBorder, yBorder)
+    device.xBorder := xBorder
+    device.yBorder := yBorder
+
+    if (debug) {
+        MsgBox(Object2Str(device))
+        MsgBox(Object2Str(game))
+    }
 }
