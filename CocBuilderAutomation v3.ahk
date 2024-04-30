@@ -296,7 +296,7 @@ message(text, messageType := "") {
 }
 
 
-systemSetup(resizeWindowToSetup := false) {
+systemSetup() {
 
 
     ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, device.control, device.window
@@ -305,16 +305,17 @@ systemSetup(resizeWindowToSetup := false) {
     if (resizeWindowToSetup) {
         desiredWindowX := WindowOutWidth - OutWidth + device.standard.controlWidth
         desiredWindowY := WindowOutHeight - OutHeight + device.standard.controlHeight
-        currentBorderX := OutX
-        currentBorderY := OutY
     } else {
         desiredWindowX := WindowOutWidth
         desiredWindowY := WindowOutHeight - OutHeight + device.standard.controlHeight * (OutWidth / device.standard.controlWidth)
-        currentBorderX := OutX
-        currentBorderY := OutY
     }
 
-    WinMove(0, 0, desiredWindowX, desiredWindowY, device.window)
+    if(debug) {
+        msgbox desiredWindowX "," desiredWindowY
+    }
+
+    activateWindow()
+    WinMove(, , desiredWindowX, desiredWindowY, device.window)
 
     ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, device.control, device.window
 
