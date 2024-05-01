@@ -181,7 +181,7 @@ quitAttack() {
                     message "yes, at home", "progress"
                     return true
                 } else {
-                    message "try click return home button again"
+                    message "try click return home button again", "progress"
                 }
             }
         } else {
@@ -279,7 +279,7 @@ checkCriteria(criteriaObject, timeout := 0, &Px := unset, &Py := unset) {
 }
 
 
-message(text, messageType := "") {
+message(text, messageType := 0) {
     t := 1
     switch messageType {
         case "objective": t := 2
