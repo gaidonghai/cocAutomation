@@ -9,31 +9,31 @@ runAttack(starTarget) {
 
     if starTarget>0 {
         deployTroops(deployCoordinate)
-    }
 
-    starCount := 0
-    abilityActivationLimit :=4 ;maximum hero ability activations before surrender
-    troopDeployed := false
-    loop abilityActivationLimit {
-        secureClick game.army.hero
-        abilityActivations := A_Index
+        starCount := 0
+        abilityActivationLimit :=4 ;maximum hero ability activations before surrender
+        loop abilityActivationLimit {
+            secureClick game.army.hero
 
-        startTime := A_TickCount
-        while A_TickCount - startTime <= 14000 {
-            message "ability activations: " abilityActivations "/" abilityActivationLimit " (" A_TickCount - startTime "), current stars: " starCount "/" starTarget, "progress"
-            if checkCriteria(game.surrender.battleEndCriteria) || starCount >= starTarget {
-                message "", "progress"
-                break 2 ;quit two levels to end this attack
-            }
+            message Format("ability activations: {1}/{2}",A_Index,abilityActivationLimit), "detail"
 
-            if (checkCriteria(game.attack.starCriterias[starCount + 1])) {
-                starCount++
+            startTime := A_TickCount
+            while A_TickCount - startTime <= 14000 {
+                if checkCriteria(game.surrender.battleEndCriteria) || starCount >= starTarget {
+                    break 2 ;quit two levels to end this attack
+                }
+
+                if (checkCriteria(game.attack.starCriterias[starCount + 1])) {
+                    starCount++
+                    message Format("current stars: {1}/{2}", starCount, starTarget), "progress"
+                }
             }
         }
     }
 
+    message "", "progress"
+    message "", "detail"
     quitAttack()
-
 }
 
 startAttack() {
@@ -71,11 +71,11 @@ startAttack() {
 }
 
 deployTroops(deployCoordinate,troopCount:=6) {
-    message "deploy troops", "progress"
+    message "deploy troops", "detail"
     clickTroop(1)
     secureDeploy(6,deployCoordinate)
 
-    message "activate troop ability", "progress"
+    message "activate troop ability", "detail"
     clickTroop(6)
 
     clickTroop(troopCount) {
@@ -99,7 +99,6 @@ secureDeploy(times,deployCoordinate:=false) {
             originalCoordinateStr:=strXY(deployCoordinate)
 
             while true {
-                message "attempting deployment at " strXY(deployCoordinate), "detail"
                 secureClick deployCoordinate,0
                 sleep 100
                 if checkCriteria(game.deploy.surrenderButtonCriteria) {
@@ -116,7 +115,7 @@ secureDeploy(times,deployCoordinate:=false) {
                     attempts++
                 }
             }
-            message Format("troop deployed at {1} after {2} attempts from {3}", strXY(deployCoordinate), attempts,originalCoordinateStr ), "detail", 10000
+            message Format("Deploy coordinate found at {1} after {2} attempts from {3}", strXY(deployCoordinate), attempts,originalCoordinateStr ), "progress"
         }
     }
     return deployCoordinate
@@ -144,7 +143,7 @@ quitAttack() {
         } else {
             message "battle end dialog not found, try click buttons", "progress"
             secureClick game.surrender.button
-            secureClick game.surrender.okay        
+            secureClick game.surrender.okay 
         }
     }
 }
