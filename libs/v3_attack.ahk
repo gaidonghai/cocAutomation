@@ -101,7 +101,7 @@ secureDeploy(times,deployCoordinate:=false) {
 
             while true {
                 message "attempting deployment at " strXY(deployCoordinate), "detail"
-                secureClick deployCoordinate
+                secureClick deployCoordinate,0
                 sleep 100
                 if checkCriteria(game.deploy.surrenderButtonCriteria) {
                     break

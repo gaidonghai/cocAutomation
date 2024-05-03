@@ -11,7 +11,9 @@ secureClick(xy, delay := 200, button := "Left")
     activateWindow()
 
     Click x + Random(-5, 5), y + Random(-5, 5), button
-    sleep Random(delay, delay * 2)
+    if delay>0 {
+        sleep Random(delay, delay * 2)
+    }
 
 }
 
@@ -90,8 +92,6 @@ message(text, messageType := 0, timeout:=0) {
         SetTimer () => ToolTip("",x,y,t), -timeout
     }
 }
-
-
 
 correctX(x) {
     x:=max(x,device.xBorder[1]+10)
