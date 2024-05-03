@@ -103,26 +103,23 @@ runAttack(starTarget) {
         loop times {
             if (deployCoordinate) {
                 secureClick deployCoordinate, 10
-                attempts:="n/a"
             } else {
-                attempts:=0
-                deployCoordinate:=game.deploy.start
-                deployCoordinate[1]+=Random(-game.deploy.randomness[1],game.deploy.randomness[1])
-                deployCoordinate[2]+=Random(-game.deploy.randomness[2],game.deploy.randomness[2])
+                deployCoordinate:=game.deploy.start.Clone()
+                deployCoordinate[1]+=correctX(Random(-game.deploy.randomness[1],game.deploy.randomness[1]))
+                deployCoordinate[2]+=correctY(Random(-game.deploy.randomness[2],game.deploy.randomness[2]))
                 message "attempting deployment at " deployCoordinate[1] "," deployCoordinate[2], "detail"
                 while true {
                     secureClick deployCoordinate, 10
                     if checkCriteria(game.deploy.surrenderButtonCriteria) {
                         break
                     } else {
-                        attempts++
-                        deployCoordinate[1]+=game.deploy.inc[1]
-                        deployCoordinate[2]+=game.deploy.inc[2]
+                        deployCoordinate[1]:=correctX(deployCoordinate[1]+game.deploy.inc[1])
+                        deployCoordinate[2]:=correctY(deployCoordinate[2]+game.deploy.inc[2])
                     }
                 }
             }
         }
-        message Format("troop deployed at {1},{2} after {3} attempts",deployCoordinate[1], deployCoordinate[2], attempts), "detail", 10000
+        message Format("troop deployed at {1},{2}",deployCoordinate[1], deployCoordinate[2]), "detail", 10000
         return deployCoordinate
     }
 
@@ -276,10 +273,10 @@ checkCriteria(criteriaObject, timeout := 0, &Px := unset, &Py := unset) {
         center := criteriaObject.center
         range := criteriaObject.range
         color := criteriaObject.color
-        x1 := Max(center[1] - range[1], device.xBorder[1])
-        y1 := Max(center[2] - range[2], device.yBorder[1])
-        x2 := Min(center[1] + range[1], device.controlWidth - device.xBorder[2])
-        y2 := Min(center[2] + range[2], device.controlHeight - device.yBorder[2])
+        x1 := correctX(center[1] - range[1])
+        y1 := correctY(center[2] - range[2])
+        x2 := correctX(center[1] + range[1])
+        y2 := correctY(center[2] + range[2])
         activateWindow()
         return PixelSearch(&Px, &Py, x1, y1, x2, y2, color, variation)
     }
@@ -348,4 +345,15 @@ askInputBox(question, defaultValue) {
         ExitApp
     }
     return IB.Value
+}
+
+correctX(x) {
+    x:=max(x,device.xBorder[1])
+    x:=min(x,device.controlWidth - device.xBorder[2])
+    return x
+}
+correctY(y) {
+    y:=max(y,device.yBorder[1])
+    y:=min(y,device.controlHeight - device.yBorder[2])
+    return y
 }
