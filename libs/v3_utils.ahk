@@ -5,6 +5,9 @@ activateWindow() {
 
 secureClick(xy, delay := 200, button := "Left")
 {
+
+    ;MouseGetPos &xpos, &ypos 
+
     x := xy[1]
     y := xy[2]
 
@@ -15,6 +18,7 @@ secureClick(xy, delay := 200, button := "Left")
         sleep Random(delay, delay * 2)
     }
 
+    ;MouseMove xpos,ypos,0
 }
 
 secureDrag(xy1, xy2, speed := 20) {
