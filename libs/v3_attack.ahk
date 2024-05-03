@@ -85,7 +85,7 @@ deployTroops(deployCoordinate,troopCount:=6) {
             y := game.army.troopY
             secureClick [x, y], 10
         }
-    }    
+    } 
 } 
 
 secureDeploy(times,deployCoordinate:=false) {
@@ -99,22 +99,25 @@ secureDeploy(times,deployCoordinate:=false) {
             deployCoordinate[2]+=correctY(Random(-game.deploy.randomness[2],game.deploy.randomness[2]))
             originalCoordinateStr:=strXY(deployCoordinate)
 
-            message "attempting deployment at " deployCoordinate[1] "," deployCoordinate[2], "detail"
             while true {
-                secureClick deployCoordinate, 10
+                message "attempting deployment at " strXY(deployCoordinate), "detail"
+                secureClick deployCoordinate
+                sleep 100
                 if checkCriteria(game.deploy.surrenderButtonCriteria) {
                     break
                 } else {
-                    deployCoordinate[1]:=correctX(deployCoordinate[1]+game.deploy.inc[1])
-                    deployCoordinate[2]:=correctY(deployCoordinate[2]+game.deploy.inc[2])
+                    if(A_Index<=4) {
+                        deployCoordinate[1]:=correctX(deployCoordinate[1]+game.deploy.inc[1])
+                        deployCoordinate[2]:=correctY(deployCoordinate[2]+game.deploy.inc[2])
+                    } else {
+                        deployCoordinate[1]:=correctX(Random(device.xBorder[1],device.controlWidth - device.xBorder[2]))
+                        deployCoordinate[2]:=correctY(Random(game.deploy.safeYRange[1],game.deploy.safeYRange[2]))
+                    }
+
                     attempts++
                 }
             }
-            message Format("troop deployed at {1} after {2} attempts from {3}", 
-                originalCoordinateStr,
-                attempts,
-                strXY(deployCoordinate)
-                ), "detail", 10000
+            message Format("troop deployed at {1} after {2} attempts from {3}", strXY(deployCoordinate), attempts,originalCoordinateStr ), "detail", 10000
         }
     }
     return deployCoordinate

@@ -94,12 +94,12 @@ message(text, messageType := 0, timeout:=0) {
 
 
 correctX(x) {
-    x:=max(x,device.xBorder[1])
-    x:=min(x,device.controlWidth - device.xBorder[2])
+    x:=max(x,device.xBorder[1]+10)
+    x:=min(x,device.controlWidth - device.xBorder[2]-10)
     return x
 }
 correctY(y) {
-    y:=max(y,device.yBorder[1])
-    y:=min(y,device.controlHeight - device.yBorder[2])
+    y:=max(y,device.yBorder[1]+10)
+    y:=min(y,device.controlHeight - device.yBorder[2]-10)
     return y
 }

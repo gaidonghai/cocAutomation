@@ -67,6 +67,7 @@ generateGameObject() {
             start: xy([500, 400]),
             randomness: mag([100,100]),
             inc: mag([-100,0]),
+            safeYRange:[y(200),y(700)],
             surrenderButtonCriteria: {
                 ;进攻场景中，左下方的放弃/surrender按钮
                 center: xy([50, 820]), 
