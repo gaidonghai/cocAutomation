@@ -10,9 +10,6 @@ device := {
     }
 }
 
-
-
-
 generateGameObject() {
 
     return {
@@ -38,6 +35,7 @@ generateGameObject() {
             start: xy([1430, 750]),
             cancel: xy([950, 1000]),
             enemyBaseCriteria: {
+                ;进攻场景中，1号兵上面的粉紫色技能条
                 center: xy([390, 950]),
                 range: mag([30, 10]),
                 color: 0xBB3CEE
@@ -65,17 +63,24 @@ generateGameObject() {
             troopXinc: x(150,false),
             troopY: y(1050)
         },
-        deploy: [
-            xy([35, 700]),
-            xy([300, 200])
-        ]
+        deploy: {
+            start: xy([500, 400]),
+            randomness: mag([100,100]),
+            inc: mag([-100,0]),
+            surrenderButtonCriteria: {
+                ;进攻场景中，左下方的放弃/surrender按钮
+                center: xy([50, 820]), 
+                range: mag([5, 5]),
+                color: 0xCE0D0E
+            }
+        }
     }
 
     generateStarCriterias() {
-        
+
         colorA := 0xDD962C ;Yellow
         colorB := 0XAED0E3 ;Silver
-        
+
         r := []
         loop 6 {
             r.push {
@@ -114,15 +119,15 @@ generateGameObject() {
 
     mag(xy) {
         return [
-            x(xy[1], false),
-            y(xy[2], false)
+        x(xy[1], false),
+        y(xy[2], false)
         ]
     }
 
     xy(xy) {
         return [
-            x(xy[1]),
-            y(xy[2])
+        x(xy[1]),
+        y(xy[2])
         ]
     }
 }

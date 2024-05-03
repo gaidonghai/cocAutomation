@@ -9,33 +9,30 @@ SetDefaultMouseSpeed 1
 
 `:: ExitApp
 
-debug := askInputBox("Debug?", 0)
-resizeWindowToSetup := askInputBox("Resize Window?", 0)
-battleLength := askInputBox("Battle length: (x15 secs)", 4)
-starTarget := askInputBox("Star Target: 1-3", 3)
+debug := 0 ;askInputBox("Debug?", 0)
+resizeWindowToSetup := 1 ;askInputBox("Resize Window?", 0)
+battleLength := 4 ;askInputBox("Battle length: (x15 secs)", 4)
+starTarget := askInputBox("Star Target: 0-3", 3)
 battleCycles := askInputBox("Cycles to run:", 300)
 game := systemSetup()
 
-
 ;-------------AUTOMATION START-------------
-
 
 initialize()
 loop battleCycles {
-    if Mod(A_Index, 5) == 1 {
+    if Mod(A_Index, 5) == 0{
         message "Collecting Elixir", "objective"
         collectElixir()
     }
 
     message "Running attack " A_Index "/" battleCycles, "objective"
-    runAttack(battleLength)
+    runAttack(starTarget)
 }
 ExitApp
 
 initialize() {
     ;set zoom and run a test attack
     activateWindow()
-
 
     message "Initializing...", "objective"
 
@@ -45,11 +42,7 @@ initialize() {
     sleep 1000
     Send "{Down up}"
     sleep 200
-
-    message "run an attack with minimum zoom", "progress"
-    runAttack(0)
 }
-
 
 activateWindow() {
     WinActivate device.window
@@ -82,21 +75,54 @@ collectElixir() {
     }
 }
 
-
-runAttack(battleLength) {
+runAttack(starTarget) {
     startAttack()
 
     message "deploy hero", "progress"
     secureClick game.army.hero
-    secureDeploy(1)
+    deployCoordinate:=secureDeploy(1)
 
-    if battleLength > 0 {
+    if starTarget > 0 {
         message "deploy troops", "progress"
         clickTroop(1)
-        secureDeploy(8)
+        secureDeploy(6,deployCoordinate)
 
         message "activate troop ability", "progress"
-        clickTroop(8)
+        clickTroop(6)
+    } 
+
+    clickTroop(troopCount := 1) {
+        loop troopCount {
+            x := game.army.troopX + game.army.troopXinc * (A_Index - 1)
+            y := game.army.troopY
+            secureClick [x, y], 10
+        }
+    }
+
+    secureDeploy(times,deployCoordinate:=false) {
+        loop times {
+            if (deployCoordinate) {
+                secureClick deployCoordinate, 10
+            } else {
+                attempts:=0
+                deployCoordinate:=game.deploy.start
+                deployCoordinate[1]+=Random(-game.deploy.randomness[1],game.deploy.randomness[1])
+                deployCoordinate[2]+=Random(-game.deploy.randomness[2],game.deploy.randomness[2])
+                message "attempting deployment at " deployCoordinate[1] "," deployCoordinate[2], "detail"
+                while true {
+                    secureClick deployCoordinate, 10
+                    if checkCriteria(game.deploy.surrenderButtonCriteria) {
+                        break
+                    } else {
+                        attempts++
+                        deployCoordinate[1]+=game.deploy.inc[1]
+                        deployCoordinate[2]+=game.deploy.inc[2]
+                    }
+                }
+            }
+        }
+        message Format("troop deployed at {1},{2} after {3} attempts",deployCoordinate[1], deployCoordinate[2], attempts), "detail", 10000
+        return deployCoordinate
     }
 
     starCount := 0
@@ -166,7 +192,6 @@ unstuck() {
     secureClick game.exitDialog.cancel
 }
 
-
 quitAttack() {
     while true {
         message "try to leave", "progress"
@@ -190,24 +215,6 @@ quitAttack() {
         }
     }
 }
-
-
-clickTroop(troopCount := 1) {
-    loop troopCount {
-        x := game.army.troopX + game.army.troopXinc * (A_Index - 1)
-        y := game.army.troopY
-        secureClick [x, y], 10
-    }
-}
-
-secureDeploy(times := 8) {
-    for coordinate in game.deploy {
-        loop times {
-            secureClick coordinate, 10
-        }
-    }
-}
-
 
 secureClick(xy, delay := 200, button := "Left")
 {
@@ -233,7 +240,6 @@ secureDrag(xy1, xy2, speed := 20) {
     MouseMove x1 + rx, y1 + ry
     MouseClickDrag "Left", x1 + rx, y1 + ry, x2 + rx, y2 + ry, speed
 }
-
 
 checkCriteria(criteriaObject, timeout := 0, &Px := unset, &Py := unset) {
     ;return false if timeout occur
@@ -278,8 +284,7 @@ checkCriteria(criteriaObject, timeout := 0, &Px := unset, &Py := unset) {
     }
 }
 
-
-message(text, messageType := 0) {
+message(text, messageType := 0, timeout:=0) {
     t := 1
     switch messageType {
         case "objective": t := 2
@@ -293,11 +298,13 @@ message(text, messageType := 0) {
     x := device.xBorder[1]
     y := device.yBorder[1] + (t - 1) * 50
     ToolTip(text, x, y, t)
+
+    if(timeout>0) {
+        SetTimer () => ToolTip("",x,y,t), -timeout
+    }
 }
 
-
 systemSetup() {
-
 
     ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, device.control, device.window
     WinGetPos &WindowOutX, &WindowOutY, &WindowOutWidth, &WindowOutHeight, device.window
