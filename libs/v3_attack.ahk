@@ -115,7 +115,7 @@ secureDeploy(times,deployCoordinate:=false) {
                     attempts++
                 }
             }
-            message Format("Deploy coordinate found at {1} after {2} attempts from {3}", strXY(deployCoordinate), attempts,originalCoordinateStr ), "progress"
+            message Format("Deployed at {1} after {2} attempts from {3}", strXY(deployCoordinate), attempts,originalCoordinateStr ), "progress"
         }
     }
     return deployCoordinate
