@@ -9,18 +9,18 @@ runAttack(starTarget) {
 
     if starTarget>0 {
         deployTroops(deployCoordinate)
-        secureClick game.army.hero
     }
 
     starCount := 0
     abilityActivationLimit :=4 ;maximum hero ability activations before surrender
     troopDeployed := false
-    loop abilityActivationLimit { 
+    loop abilityActivationLimit {
+        secureClick game.army.hero
         abilityActivations := A_Index
 
         startTime := A_TickCount
         while A_TickCount - startTime <= 14000 {
-            message "activations: " abilityActivations "/" abilityActivationLimit " (" A_TickCount - startTime "), current stars: " starCount "/" starTarget, "progress"
+            message "ability activations: " abilityActivations "/" abilityActivationLimit " (" A_TickCount - startTime "), current stars: " starCount "/" starTarget, "progress"
             if checkCriteria(game.surrender.battleEndCriteria) || starCount >= starTarget {
                 message "", "progress"
                 break 2 ;quit two levels to end this attack
@@ -30,7 +30,6 @@ runAttack(starTarget) {
                 starCount++
             }
         }
-        secureClick game.army.hero
     }
 
     quitAttack()
@@ -129,10 +128,8 @@ secureDeploy(times,deployCoordinate:=false) {
 
 quitAttack() {
     while true {
-        message "try to leave", "progress"
-        secureClick game.surrender.button
-        secureClick game.surrender.okay
-        if checkCriteria(game.surrender.battleEndCriteria, 1000) {
+        message "checking battle end dialog...", "progress"
+        if checkCriteria(game.surrender.battleEndCriteria) {
             message "battle end dialog appeared", "progress"
             while true {
                 secureClick game.surrender.returnHome
@@ -145,8 +142,9 @@ quitAttack() {
                 }
             }
         } else {
-            message "return dialog not detected, wait and retry", "progress"
-            sleep 1000
+            message "battle end dialog not found, try click buttons", "progress"
+            secureClick game.surrender.button
+            secureClick game.surrender.okay        
         }
     }
 }
