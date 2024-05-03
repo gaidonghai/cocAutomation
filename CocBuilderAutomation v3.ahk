@@ -103,6 +103,7 @@ runAttack(starTarget) {
         loop times {
             if (deployCoordinate) {
                 secureClick deployCoordinate, 10
+                attempts:="n/a"
             } else {
                 attempts:=0
                 deployCoordinate:=game.deploy.start
