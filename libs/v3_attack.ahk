@@ -8,12 +8,12 @@ runAttack(starTarget) {
     deployCoordinate:=secureDeploy(1)
 
     if starTarget>0 {
-        secureClick game.army.hero
         deployTroops(deployCoordinate)
+        secureClick game.army.hero
     }
 
     starCount := 0
-    abilityActivationLimit :=4 ;maximum hero ability activations before surrender (first use 2 charges)
+    abilityActivationLimit :=4 ;maximum hero ability activations before surrender
     troopDeployed := false
     loop abilityActivationLimit { 
         abilityActivations := A_Index
