@@ -29,30 +29,7 @@ sleep 200
 
 loop battleCycles {
     if Mod(A_Index, 5) == 0{
-        activateWindow()
-        message "Collecting Elixir", "objective"
-        message "searching for elixir cart", "progress"
-        secureDrag(game.elixir.drag[1], game.elixir.drag[2])
-        sleep 200
-
-        if checkCriteria(game.elixir.cart, 1000, &Px, &Py) {
-            message "open elixir cart", "progress"
-            sleep 200
-        } else {
-            ;Msgbox "!!!elixir cart not found. Quit process."
-            return
-        }
-
-        secureClick [Px, Py]
-        sleep 200
-        if checkCriteria(game.elixir.close) {
-            message "collect elixir", "progress"
-            secureClick game.elixir.collect
-            secureClick game.elixir.close.center
-        } else {
-            ;msgbox "!!!Cart window not found. Quit process"
-            return
-        }
+        collectElixir()
     }
 
     message "Running attack " A_Index "/" battleCycles, "objective"
@@ -61,6 +38,33 @@ loop battleCycles {
 
 ExitApp
 ;-------------AUTOMATION ENDS-------------
+
+collectElixir() {
+    ;return true if successful
+    activateWindow()
+    message "Collecting Elixir", "progress"
+    message "searching for elixir cart", "detail"
+    secureDrag(game.elixir.drag[1], game.elixir.drag[2])
+    sleep 200
+
+    if checkCriteria(game.elixir.cart, 2000, &Px, &Py) {
+        message "open elixir cart", "progress"
+        secureClick [Px, Py]
+    } else {
+        message "!!!elixir cart not found. Quit process.", "progress"
+        return false
+    }
+
+    if checkCriteria(game.elixir.close, 2000) {
+        message "collect elixir", "progress"
+        secureClick game.elixir.collect
+        secureClick game.elixir.close.center
+    } else {
+        message "!!!Cart window not found. Quit process", "progress"
+        return false
+    }
+    return true
+}
 
 
 systemSetup() {
