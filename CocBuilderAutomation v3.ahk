@@ -12,7 +12,6 @@ SetDefaultMouseSpeed 1
 `:: ExitApp
 
 debug := 0 ;askInputBox("Debug?", 0)
-resizeWindowToSetup := 1 ;askInputBox("Resize Window?", 0)
 starTarget := askInputBox("Star Target: 0-3", 3)
 battleCycles := askInputBox("Cycles to run:", 300)
 game := systemSetup()
@@ -69,17 +68,9 @@ systemSetup() {
     ControlGetPos &OutX, &OutY, &OutWidth, &OutHeight, device.control, device.window
     WinGetPos &WindowOutX, &WindowOutY, &WindowOutWidth, &WindowOutHeight, device.window
 
-    if (resizeWindowToSetup) {
-        desiredWindowX := WindowOutWidth - OutWidth + device.standard.controlWidth
-        desiredWindowY := WindowOutHeight - OutHeight + device.standard.controlHeight
-    } else {
-        desiredWindowX := WindowOutWidth
-        desiredWindowY := WindowOutHeight - OutHeight + device.standard.controlHeight * (OutWidth / device.standard.controlWidth)
-    }
 
-    if(debug) {
-        msgbox desiredWindowX "," desiredWindowY
-    }
+    desiredWindowX := WindowOutWidth
+    desiredWindowY := WindowOutHeight - OutHeight + device.standard.controlHeight * (OutWidth / device.standard.controlWidth)
 
     activateWindow()
     WinMove(, , desiredWindowX, desiredWindowY, device.window)
