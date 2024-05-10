@@ -28,11 +28,12 @@ Send "{Down up}"
 sleep 200
 
 loop battleCycles {
+    message "Running cycles: " A_Index "/" battleCycles, "objective"
+
     if Mod(A_Index, 5) == 0{
         collectElixir()
     }
 
-    message "Running attack " A_Index "/" battleCycles, "objective"
     runAttack(starTarget)
 }
 
