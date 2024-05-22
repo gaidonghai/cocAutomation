@@ -1,6 +1,6 @@
 device := {
     name: "bluestacks",
-    window: "BlueStacks Android 11",
+    window: "BlueStacks App Player",
     control: "BlueStacksApp1",
     standard : {
         controlWidth: 1920,
