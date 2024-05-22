@@ -3,43 +3,56 @@ runAttack(starTarget) {
 
     startAttack()
 
-    message "deploy hero", "progress"
-    secureClick game.army.hero
-    deployCoordinate:=secureDeploy(1)
-
-
     starCount := 0
-    loop Floor((starTarget-1)/3)+1 {
+    abilityActivationLimit :=4 ;maximum hero ability activations in each stages 
+    loop 2 { 
+        ;First loop: 2 stages
+        battleStage:=A_Index
+        message "deploy hero", "progress"
+        secureClick game.army.hero
+        deployCoordinate:=secureDeploy(1)
+        if starTarget==0 {
+            break
+        }
         deployTroops(deployCoordinate,4+A_Index*2)
-        abilityActivationLimit :=4 ;maximum hero ability activations before surrender
-        loop abilityActivationLimit {
-            secureClick game.army.hero
-            message Format("ability activations: {1}/{2}",A_Index,abilityActivationLimit), "detail"
 
-            startTime := A_TickCount
-            while A_TickCount - startTime <= 14000 {
-                if checkCriteria(game.surrender.battleEndCriteria) || starCount >= starTarget {
-                    break 3 ;quit 3 levels to end this attack
-                }
+        startTime := A_TickCount
+        nextAbility := startTime
+        stageCleared := false
+        abilityUsed:=0
+        loop {
+            ;Second loop: fight within stages
+            ;keep fighting until break conditions
 
-                if (checkCriteria(game.attack.starCriterias[starCount + 1])) {
-                    starCount++
-                    message Format("current stars: {1}/{2}", starCount, starTarget), "progress"
-                }
+            ;Use hero ability
+            if A_TickCount>=nextAbility and not stageCleared{
+                abilityUsed++
+                secureClick game.army.hero
+                nextAbility:=A_TickCount+14000
+                message Format("ability activations: {1}/{2}",abilityUsed,abilityActivationLimit), "detail"
 
-                if starCount == 3 {
-                    while checkCriteria(game.attack.starCriterias[3]) {
-                        message "Waiting for 2nd stages to appear", "detail"
-                        sleep 200
-                    }
-                    sleep 2000
-                    message "2nd stage ready, deploying troops", "detail"
-                    break 2 ;quit 2 levels to deploy troops again
+            }
+
+            if (checkCriteria(game.attack.starCriterias[starCount + 1])) {
+                starCount++
+                if(starCount==3) {
+                    stageCleared:= A_TickCount
+                    message "Got 3 stars in stage one, waiting for 2nd stages to appear", "detail"
                 }
+                message Format("current stars: {1}/{2}", starCount, starTarget), "progress"
+            }
+
+            if abilityUsed>abilityActivationLimit || checkCriteria(game.surrender.battleEndCriteria) || starCount >= starTarget {
+                break 2 ;quit 2 levels to end this attack
+            }
+
+            if stageCleared and A_TickCount>stageCleared+3000 and not checkCriteria(game.attack.starCriterias[3]) {
+                sleep 2000
+                message "2nd stage ready, deploying troops", "detail"
+                break 1 ;quit 1 levels to end this stage
             }
         }
     }
-
 
     message "", "progress"
     message "", "detail"
@@ -83,10 +96,10 @@ startAttack() {
 deployTroops(deployCoordinate,troopCount:=6) {
     message "deploy troops", "detail"
     clickTroop(1)
-    secureDeploy(6,deployCoordinate)
+    secureDeploy(troopCount,deployCoordinate)
 
     message "activate troop ability", "detail"
-    clickTroop(6)
+    clickTroop(troopCount)
 
     clickTroop(troopCount) {
         loop troopCount {
@@ -108,10 +121,10 @@ secureDeploy(times,deployCoordinate:=false) {
             deployCoordinate[2]+=correctY(Random(-game.deploy.randomness[2],game.deploy.randomness[2]))
             originalCoordinateStr:=strXY(deployCoordinate)
 
-            while true {
+            loop 10 {
                 secureClick deployCoordinate,0
                 sleep 100
-                if checkCriteria(game.deploy.surrenderButtonCriteria) {
+                if checkCriteria(game.deploy.countdownTimerCriteria) {
                     break
                 } else {
                     if(A_Index<=4) {

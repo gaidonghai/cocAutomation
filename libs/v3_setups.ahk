@@ -73,6 +73,12 @@ generateGameObject() {
                 center: xy([50, 820]), 
                 range: mag([5, 5]),
                 color: 0xCE0D0E
+            },
+            countdownTimerCriteria: {
+                ;2分0秒/2m0s的白色2
+                center: xy([880, 145]), 
+                range: mag([10, 10]),
+                color: 0xFFFFFF
             }
         }
     }
