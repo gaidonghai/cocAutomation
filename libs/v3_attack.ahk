@@ -7,29 +7,39 @@ runAttack(starTarget) {
     secureClick game.army.hero
     deployCoordinate:=secureDeploy(1)
 
-    if starTarget>0 {
-        deployTroops(deployCoordinate)
 
-        starCount := 0
+    starCount := 0
+    loop Floor((starTarget-1)/3)+1 {
+        deployTroops(deployCoordinate,4+A_Index*2)
         abilityActivationLimit :=4 ;maximum hero ability activations before surrender
         loop abilityActivationLimit {
             secureClick game.army.hero
-
             message Format("ability activations: {1}/{2}",A_Index,abilityActivationLimit), "detail"
 
             startTime := A_TickCount
             while A_TickCount - startTime <= 14000 {
                 if checkCriteria(game.surrender.battleEndCriteria) || starCount >= starTarget {
-                    break 2 ;quit two levels to end this attack
+                    break 3 ;quit 3 levels to end this attack
                 }
 
                 if (checkCriteria(game.attack.starCriterias[starCount + 1])) {
                     starCount++
                     message Format("current stars: {1}/{2}", starCount, starTarget), "progress"
                 }
+
+                if starCount == 3 {
+                    while checkCriteria(game.attack.starCriterias[3]) {
+                        message "Waiting for 2nd stages to appear", "detail"
+                        sleep 200
+                    }
+                    sleep 2000
+                    message "2nd stage ready, deploying troops", "detail"
+                    break 2 ;quit 2 levels to deploy troops again
+                }
             }
         }
     }
+
 
     message "", "progress"
     message "", "detail"
