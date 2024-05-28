@@ -28,7 +28,7 @@ runAttack(starTarget) {
             if A_TickCount>=nextAbility and not stageCleared{
                 abilityUsed++
                 secureClick game.army.hero
-                nextAbility:=A_TickCount+14000
+                nextAbility:=A_TickCount+15000
                 message Format("ability activations: {1}/{2}",abilityUsed,abilityActivationLimit), "detail"
 
             }
