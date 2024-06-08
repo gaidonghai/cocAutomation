@@ -10,7 +10,7 @@ runAttack(starTarget) {
         battleStage:=A_Index
         message "deploy hero", "progress"
         secureClick game.army.hero
-        deployCoordinate:=secureDeploy(1)
+        deployCoordinate:=secureDeploy()
         if starTarget==0 {
             break
         }
@@ -95,52 +95,49 @@ startAttack() {
 
 deployTroops(deployCoordinate,troopCount:=6) {
     message "deploy troops", "detail"
-    clickTroop(1)
-    secureDeploy(troopCount,deployCoordinate)
+    loop troopCount{
+        clickTroop(A_Index)
+        secureDeploy(deployCoordinate)
+        clickTroop(A_Index)
+    }
 
-    message "activate troop ability", "detail"
-    clickTroop(troopCount)
-
-    clickTroop(troopCount) {
-        loop troopCount {
-            x := game.army.troopX + game.army.troopXinc * (A_Index - 1)
-            y := game.army.troopY
-            secureClick [x, y], 10
-        }
+    clickTroop(troopNumber) {
+        x := game.army.troopX + game.army.troopXinc * (troopNumber - 1)
+        y := game.army.troopY
+        secureClick [x, y], 10
     } 
 } 
 
-secureDeploy(times,deployCoordinate:=false) {
-    loop times {
-        if (deployCoordinate) {
-            secureClick deployCoordinate, 10
-        } else {
-            attempts:=0
-            deployCoordinate:=game.deploy.start.Clone()
-            deployCoordinate[1]+=correctX(Random(-game.deploy.randomness[1],game.deploy.randomness[1]))
-            deployCoordinate[2]+=correctY(Random(-game.deploy.randomness[2],game.deploy.randomness[2]))
-            originalCoordinateStr:=strXY(deployCoordinate)
+secureDeploy(deployCoordinate:=false) {
+    if (deployCoordinate) {
+        secureClick deployCoordinate, 10
+    } else {
+        attempts:=0
+        deployCoordinate:=game.deploy.start.Clone()
+        deployCoordinate[1]+=correctX(Random(-game.deploy.randomness[1],game.deploy.randomness[1]))
+        deployCoordinate[2]+=correctY(Random(-game.deploy.randomness[2],game.deploy.randomness[2]))
+        originalCoordinateStr:=strXY(deployCoordinate)
 
-            loop 10 {
-                secureClick deployCoordinate,0
-                sleep 100
-                if checkCriteria(game.deploy.countdownTimerCriteria) {
-                    break
+        loop 10 {
+            secureClick deployCoordinate,0
+            sleep 100
+            if checkCriteria(game.deploy.countdownTimerCriteria) {
+                break
+            } else {
+                if(A_Index<=4) {
+                    deployCoordinate[1]:=correctX(deployCoordinate[1]+game.deploy.inc[1])
+                    deployCoordinate[2]:=correctY(deployCoordinate[2]+game.deploy.inc[2])
                 } else {
-                    if(A_Index<=4) {
-                        deployCoordinate[1]:=correctX(deployCoordinate[1]+game.deploy.inc[1])
-                        deployCoordinate[2]:=correctY(deployCoordinate[2]+game.deploy.inc[2])
-                    } else {
-                        deployCoordinate[1]:=correctX(Random(device.xBorder[1],device.controlWidth - device.xBorder[2]))
-                        deployCoordinate[2]:=correctY(Random(game.deploy.safeYRange[1],game.deploy.safeYRange[2]))
-                    }
-
-                    attempts++
+                    deployCoordinate[1]:=correctX(Random(device.xBorder[1],device.controlWidth - device.xBorder[2]))
+                    deployCoordinate[2]:=correctY(Random(game.deploy.safeYRange[1],game.deploy.safeYRange[2]))
                 }
+
+                attempts++
             }
-            message Format("Deployed at {1} after {2} attempts from {3}", strXY(deployCoordinate), attempts,originalCoordinateStr ), "progress"
         }
+        message Format("Deployed at {1} after {2} attempts from {3}", strXY(deployCoordinate), attempts,originalCoordinateStr ), "progress"
     }
+
     return deployCoordinate
 
     strXY(xy) {
