@@ -64,9 +64,9 @@ generateGameObject() {
             troopY: y(1050)
         },
         deploy: {
-            start: xy([500, 400]),
-            randomness: mag([100,100]),
-            inc: mag([-100,0]),
+            start: xy([50, 600]),
+            randomness: mag([10,10]),
+            inc: mag([0,-50]),
             safeYRange:[y(200),y(700)],
             surrenderButtonCriteria: {
                 ;进攻场景中，左下方的放弃/surrender按钮
